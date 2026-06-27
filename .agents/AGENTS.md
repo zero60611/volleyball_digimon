@@ -1,35 +1,32 @@
-# 皮卡丘打排球專案開發與循環工程規範
+# 🤖 開發與循環工程工作流守則 (AGENTS.md)
 
-本專案是一個完美復刻 1997 年經典《皮卡丘打排球》網頁版之 Vue 3 專案。
+本專案是一個採用 Vue 3 與 PixiJS 完美復刻 1997 年經典《皮卡丘打排球》（改裝大耳獸版本）的網頁專案。
+為確保專案品質，AI 代理人在開發、修改或提交程式碼前，必須遵守本文件的規範。
+
+---
 
 ## 🛠️ 1. 本地開發與驗證指令
-- 啟動開發伺服器: `npm run dev`
-- 專案打包建置: `npm run build`
-- 執行測試套件: `npm run test` (Vitest)
-- 程式碼格式化: `npm run lint`
+*   **安裝依賴**：`npm install`
+*   **啟動本地開發伺服器**：`npm run dev`
+*   **專案打包建置**：`npm run build`
+*   **執行無頭單元測試**：`npm run test` (Vitest)
+
+---
 
 ## 🔄 2. 循環工程自修正守則
-- 修改 `src/game/physics.js` 或相關計算引擎時，必須隨時執行 `npm run test`。
-- 如果測試套件有任何失敗 (Fail)，AI 代理人必須讀取錯誤訊息並持續修正，直至測試 100% 通過。
-- 在提交代碼前，必須確保 `npm run build` 能夠無編譯錯誤成功打包。
+1.  **測試驅動修正**：任何對物理計算 (`src/game/physics.js`) 或核心控制器的修改，必須在修改後第一時間執行 `npm run test` 進行驗證。
+2.  **不破壞現有功能**：每次提交前，必須執行 `npm run build`，確保無任何 TypeScript/Vite/ESLint 編譯錯誤。
+3.  **遵循歷史教訓**：在變更鍵盤控制、行動端事件模擬、資源載入路徑等模組前，**必須先閱讀並遵守 [LESSONS.md](LESSONS.md) 中紀錄的問題排解規範**。
+
+---
 
 ## 📐 3. 技術規格限制
-- 視窗大小固定為 432x304 像素。
-- 物理運算必須在 `physics.js` 中嚴格依據逆向工程所得的公式。
-- BGM 音訊檔與 Sprite 資源直接引用 `public/resources/assets/...`。
+*   **畫面大小**：Canvas 物理大小固定為 $432 \times 304$ 像素。CSS 層面則做自適應縮放。
+*   **物理公式**：碰撞常數、重力加速度與球網反彈邏輯必須精準與逆向工程結果對齊。
+*   **相容性要求**：維持使用 Vite 5 與 Vitest 1.5，以確保與本地 Node `v20.15.0` 的原生綁定相容。
 
-## 📝 4. 跨平台與行動裝置開發經驗教訓 (Lessons Learned)
-### ⚠️ iOS/Safari 虛擬按鍵模擬 Bug
-*   **問題描述**：在行動裝置（特別是 iOS Safari）上，使用 `new KeyboardEvent('keydown', { code: 'KeyD' })` 模擬按鍵時，瀏覽器會因為底層限制，導致 `event.code` 屬性變為唯讀且為空值或未定義，使物理與輸入引擎無法識別按鍵。
-*   **解決方案**：
-    1. 必須使用 `Object.defineProperty(event, 'code', { value: keyCode })` 來顯式注入 `code` 屬性，避開唯讀建構子的 Bug。
-    2. 同時在 options 中補全 `key`（如 `'d'`）和 `keyCode` / `which`（如 `68`），實現完整的瀏覽器相容性。
-    3. 所有觸控按鈕事件皆應加上 `.prevent` 修飾符（如 `@touchstart.prevent`），以防止行動裝置觸控時觸發瀏覽器的預設縮放或滑動手勢。
+---
 
-### ⚠️ 選單確認鍵與玩家角色控制權對應 Bug
-*   **問題描述**：在原版遊戲設計中，使用 `Enter` 鍵進行選單確認會將玩家分配為 **Player 2 (右側角色)**，而使用 `Z` 鍵確認則是 **Player 1 (左側角色)**。當虛擬手把的「確認鍵」被綁定為 `Enter` 且方向鍵只綁定 P1 的實體鍵 (`KeyD`/`KeyG`/`KeyR`) 時，玩家若使用 `Enter` 開始遊戲將無法操作（因為控制的左側角色為電腦 AI，右側人控角色則需要方向鍵 `ArrowLeft`/`ArrowRight`/`ArrowUp`）。
-*   **解決方案**：
-    1. 在發送虛擬按鍵的 `triggerKey` 函數中，加入**動態角色偵測**。
-    2. 檢查 `pikaVolley.physics.player2.isComputer === false`（代表右側 Player 2 為人類玩家）。
-    3. 若是 Player 2 控球，則將虛擬十字鍵發送的 `KeyD`/`KeyG`/`KeyR`/`KeyV`/`KeyZ` 分別對應轉換為 P2 的 `ArrowLeft`/`ArrowRight`/`ArrowUp`/`ArrowDown`/`Enter` 進行發送。
-    4. 此做法能確保無論玩家從左邊或右邊開局、用什麼鍵確認，虛擬手把都能 100% 正常操縱玩家角色。
+## 📂 4. 知識庫關聯文件 (Related Documents)
+*   **歷史開發問題與避嫌紀錄庫**：👉 [LESSONS.md](LESSONS.md) (記錄所有 ISSUE 的根本原因與解決方案)
+*   **測試與發布驗證計畫書**：👉 [TEST_PLAN.md](TEST_PLAN.md) (手動與自動化測試驗證清單)
