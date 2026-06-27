@@ -270,11 +270,36 @@ const showVirtualController = ref(false);
 
 const triggerKey = (keyCode, isDown) => {
   const eventType = isDown ? 'keydown' : 'keyup';
+  
+  // Cross-browser compatibility map for key and keyCode values
+  const keyMap = {
+    'KeyD': { key: 'd', keyCode: 68 },
+    'KeyG': { key: 'g', keyCode: 71 },
+    'KeyR': { key: 'r', keyCode: 82 },
+    'KeyV': { key: 'v', keyCode: 86 },
+    'KeyZ': { key: 'z', keyCode: 90 },
+    'Enter': { key: 'Enter', keyCode: 13 }
+  };
+  
+  const mapped = keyMap[keyCode] || { key: '', keyCode: 0 };
+  
+  // Standard constructor
   const event = new KeyboardEvent(eventType, {
-    code: keyCode,
+    key: mapped.key,
+    keyCode: mapped.keyCode,
+    which: mapped.keyCode,
     bubbles: true,
     cancelable: true
   });
+  
+  // Explicitly define the 'code' property to bypass iOS Safari read-only constructor bugs
+  Object.defineProperty(event, 'code', {
+    value: keyCode,
+    writable: false,
+    configurable: true,
+    enumerable: true
+  });
+  
   window.dispatchEvent(event);
 };
 
