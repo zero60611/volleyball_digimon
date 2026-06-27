@@ -71,6 +71,15 @@
 
       <!-- About / Keybindings -->
       <button class="menu-btn" @click="showAbout = true">操作說明 / 關於 (A)</button>
+
+      <!-- Virtual Controller Toggle -->
+      <button 
+        class="menu-btn controller-toggle" 
+        :class="{ 'menu-btn-active': showVirtualController }"
+        @click="showVirtualController = !showVirtualController"
+      >
+        🎮 螢幕手把: {{ showVirtualController ? '顯示' : '隱藏' }}
+      </button>
     </div>
 
     <!-- Game Canvas Section -->
@@ -92,6 +101,84 @@
         :class="{ 'graphic-soft': isSoftGraphic }"
       >
         <!-- PixiJS canvas will mount here -->
+      </div>
+    </div>
+
+    <!-- Virtual Gamepad Overlay -->
+    <div v-if="showVirtualController" class="virtual-controller">
+      <!-- D-Pad -->
+      <div class="dpad-container">
+        <div></div>
+        <button 
+          class="control-btn dpad-btn up"
+          @touchstart.prevent="triggerKey('KeyR', true)"
+          @touchend.prevent="triggerKey('KeyR', false)"
+          @touchcancel.prevent="triggerKey('KeyR', false)"
+          @mousedown.prevent="triggerKey('KeyR', true)"
+          @mouseup.prevent="triggerKey('KeyR', false)"
+          @mouseleave.prevent="triggerKey('KeyR', false)"
+        >▲</button>
+        <div></div>
+        
+        <button 
+          class="control-btn dpad-btn left"
+          @touchstart.prevent="triggerKey('KeyD', true)"
+          @touchend.prevent="triggerKey('KeyD', false)"
+          @touchcancel.prevent="triggerKey('KeyD', false)"
+          @mousedown.prevent="triggerKey('KeyD', true)"
+          @mouseup.prevent="triggerKey('KeyD', false)"
+          @mouseleave.prevent="triggerKey('KeyD', false)"
+        >◀</button>
+        <div class="dpad-center"></div>
+        <button 
+          class="control-btn dpad-btn right"
+          @touchstart.prevent="triggerKey('KeyG', true)"
+          @touchend.prevent="triggerKey('KeyG', false)"
+          @touchcancel.prevent="triggerKey('KeyG', false)"
+          @mousedown.prevent="triggerKey('KeyG', true)"
+          @mouseup.prevent="triggerKey('KeyG', false)"
+          @mouseleave.prevent="triggerKey('KeyG', false)"
+        >▶</button>
+        
+        <div></div>
+        <button 
+          class="control-btn dpad-btn down"
+          @touchstart.prevent="triggerKey('KeyV', true)"
+          @touchend.prevent="triggerKey('KeyV', false)"
+          @touchcancel.prevent="triggerKey('KeyV', false)"
+          @mousedown.prevent="triggerKey('KeyV', true)"
+          @mouseup.prevent="triggerKey('KeyV', false)"
+          @mouseleave.prevent="triggerKey('KeyV', false)"
+        >▼</button>
+        <div></div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-container">
+        <button 
+          class="control-btn action-btn z-btn"
+          @touchstart.prevent="triggerKey('KeyZ', true)"
+          @touchend.prevent="triggerKey('KeyZ', false)"
+          @touchcancel.prevent="triggerKey('KeyZ', false)"
+          @mousedown.prevent="triggerKey('KeyZ', true)"
+          @mouseup.prevent="triggerKey('KeyZ', false)"
+          @mouseleave.prevent="triggerKey('KeyZ', false)"
+        >
+          <span class="btn-text">Z</span>
+          <span class="btn-sub">擊球</span>
+        </button>
+        <button 
+          class="control-btn action-btn enter-btn"
+          @touchstart.prevent="triggerKey('Enter', true)"
+          @touchend.prevent="triggerKey('Enter', false)"
+          @touchcancel.prevent="triggerKey('Enter', false)"
+          @mousedown.prevent="triggerKey('Enter', true)"
+          @mouseup.prevent="triggerKey('Enter', false)"
+          @mouseleave.prevent="triggerKey('Enter', false)"
+        >
+          <span class="btn-text">⏎</span>
+          <span class="btn-sub">確認</span>
+        </button>
       </div>
     </div>
 
@@ -178,6 +265,18 @@ const winningScore = ref(15);
 const bgmVolume = ref(true);
 const sfxMode = ref('stereo'); // stereo, mono, off
 const isSoftGraphic = ref(false);
+const isMobile = ref(false);
+const showVirtualController = ref(false);
+
+const triggerKey = (keyCode, isDown) => {
+  const eventType = isDown ? 'keydown' : 'keyup';
+  const event = new KeyboardEvent(eventType, {
+    code: keyCode,
+    bubbles: true,
+    cancelable: true
+  });
+  window.dispatchEvent(event);
+};
 
 // PIXI and PikachuVolleyball instance references
 let pixiRenderer = null;
@@ -288,6 +387,11 @@ const setGraphic = (soft) => {
 
 // Lifecycle Hooks
 onMounted(() => {
+  isMobile.value = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  if (isMobile.value) {
+    showVirtualController.value = true;
+  }
+  
   // Global key listener for Esc (toggle menu bar) and P (toggle pause)
   window.addEventListener('keydown', handleGlobalKeydown);
 
@@ -692,5 +796,157 @@ kbd {
 @keyframes bounce {
   from { transform: translateY(0); }
   to { transform: translateY(-10px); }
+}
+
+/* Virtual Gamepad Styles */
+.menu-btn.controller-toggle {
+  background: rgba(147, 51, 234, 0.15);
+  border: 1px solid rgba(147, 51, 234, 0.3);
+  color: #e9d5ff;
+}
+
+.menu-btn.controller-toggle:hover {
+  background: rgba(147, 51, 234, 0.3);
+  border-color: rgba(147, 51, 234, 0.5);
+}
+
+.menu-btn.controller-toggle.menu-btn-active {
+  background: rgba(147, 51, 234, 0.6);
+  border-color: rgba(147, 51, 234, 0.8);
+  color: #fff;
+  box-shadow: 0 0 8px rgba(147, 51, 234, 0.5);
+}
+
+.virtual-controller {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 432px;
+  margin: 16px auto 0 auto;
+  padding: 14px 20px;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+  user-select: none;
+}
+
+.dpad-container {
+  display: grid;
+  grid-template-columns: repeat(3, 42px);
+  grid-template-rows: repeat(3, 42px);
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 6px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.dpad-center {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+}
+
+.control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  cursor: pointer;
+  user-select: none;
+  touch-action: none;
+  transition: background 0.05s, transform 0.05s;
+}
+
+.control-btn:active {
+  transform: scale(0.9);
+}
+
+.control-btn.dpad-btn {
+  font-size: 15px;
+  color: #94a3b8;
+}
+
+.control-btn.dpad-btn:active {
+  background: rgba(59, 130, 246, 0.4) !important;
+  color: #fff;
+}
+
+.control-btn.dpad-btn.up {
+  border-radius: 8px 8px 0 0;
+  background: rgba(59, 130, 246, 0.1);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.15);
+}
+.control-btn.dpad-btn.down {
+  border-radius: 0 0 8px 8px;
+  background: rgba(59, 130, 246, 0.1);
+  border-top: 1px solid rgba(59, 130, 246, 0.15);
+}
+.control-btn.dpad-btn.left {
+  border-radius: 8px 0 0 8px;
+  background: rgba(59, 130, 246, 0.1);
+  border-right: 1px solid rgba(59, 130, 246, 0.15);
+}
+.control-btn.dpad-btn.right {
+  border-radius: 0 8px 8px 0;
+  background: rgba(59, 130, 246, 0.1);
+  border-left: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+.action-container {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.control-btn.action-btn {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.control-btn.action-btn.z-btn {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+
+.control-btn.action-btn.z-btn:active {
+  background: rgba(239, 68, 68, 0.5) !important;
+  color: #fff;
+}
+
+.control-btn.action-btn.enter-btn {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #a7f3d0;
+  transform: translateY(-4px);
+}
+
+.control-btn.action-btn.enter-btn:active {
+  background: rgba(16, 185, 129, 0.5) !important;
+  color: #fff;
+  transform: translateY(-4px) scale(0.9);
+}
+
+.btn-text {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.btn-sub {
+  font-size: 8px;
+  opacity: 0.8;
+  margin-top: 1px;
 }
 </style>
