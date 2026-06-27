@@ -271,6 +271,17 @@ const showVirtualController = ref(false);
 const triggerKey = (keyCode, isDown) => {
   const eventType = isDown ? 'keydown' : 'keyup';
   
+  let targetKeyCode = keyCode;
+  
+  // Dynamic mapping: If Player 2 (Right) is the human, map P1's virtual inputs to P2's controls
+  if (pikaVolley && pikaVolley.physics && pikaVolley.physics.player2 && pikaVolley.physics.player2.isComputer === false) {
+    if (keyCode === 'KeyD') targetKeyCode = 'ArrowLeft';
+    else if (keyCode === 'KeyG') targetKeyCode = 'ArrowRight';
+    else if (keyCode === 'KeyR') targetKeyCode = 'ArrowUp';
+    else if (keyCode === 'KeyV') targetKeyCode = 'ArrowDown';
+    else if (keyCode === 'KeyZ') targetKeyCode = 'Enter';
+  }
+  
   // Cross-browser compatibility map for key and keyCode values
   const keyMap = {
     'KeyD': { key: 'd', keyCode: 68 },
@@ -278,10 +289,14 @@ const triggerKey = (keyCode, isDown) => {
     'KeyR': { key: 'r', keyCode: 82 },
     'KeyV': { key: 'v', keyCode: 86 },
     'KeyZ': { key: 'z', keyCode: 90 },
-    'Enter': { key: 'Enter', keyCode: 13 }
+    'Enter': { key: 'Enter', keyCode: 13 },
+    'ArrowLeft': { key: 'ArrowLeft', keyCode: 37 },
+    'ArrowRight': { key: 'ArrowRight', keyCode: 39 },
+    'ArrowUp': { key: 'ArrowUp', keyCode: 38 },
+    'ArrowDown': { key: 'ArrowDown', keyCode: 40 }
   };
   
-  const mapped = keyMap[keyCode] || { key: '', keyCode: 0 };
+  const mapped = keyMap[targetKeyCode] || { key: '', keyCode: 0 };
   
   // Standard constructor
   const event = new KeyboardEvent(eventType, {
@@ -294,7 +309,7 @@ const triggerKey = (keyCode, isDown) => {
   
   // Explicitly define the 'code' property to bypass iOS Safari read-only constructor bugs
   Object.defineProperty(event, 'code', {
-    value: keyCode,
+    value: targetKeyCode,
     writable: false,
     configurable: true,
     enumerable: true
