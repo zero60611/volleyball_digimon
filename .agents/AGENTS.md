@@ -17,3 +17,11 @@
 - 視窗大小固定為 432x304 像素。
 - 物理運算必須在 `physics.js` 中嚴格依據逆向工程所得的公式。
 - BGM 音訊檔與 Sprite 資源直接引用 `public/resources/assets/...`。
+
+## 📝 4. 跨平台與行動裝置開發經驗教訓 (Lessons Learned)
+### ⚠️ iOS/Safari 虛擬按鍵模擬 Bug
+*   **問題描述**：在行動裝置（特別是 iOS Safari）上，使用 `new KeyboardEvent('keydown', { code: 'KeyD' })` 模擬按鍵時，瀏覽器會因為底層限制，導致 `event.code` 屬性變為唯讀且為空值或未定義，使物理與輸入引擎無法識別按鍵。
+*   **解決方案**：
+    1. 必須使用 `Object.defineProperty(event, 'code', { value: keyCode })` 來顯式注入 `code` 屬性，避開唯讀建構子的 Bug。
+    2. 同時在 options 中補全 `key`（如 `'d'`）和 `keyCode` / `which`（如 `68`），實現完整的瀏覽器相容性。
+    3. 所有觸控按鈕事件皆應加上 `.prevent` 修飾符（如 `@touchstart.prevent`），以防止行動裝置觸控時觸發瀏覽器的預設縮放或滑動手勢。
