@@ -469,9 +469,25 @@ onMounted(() => {
 
     // Setup game loop
     ticker.maxFPS = pikaVolley.normalFPS;
+    let frameCount = 0;
     ticker.add(() => {
       pikaVolley.gameLoop();
       pixiRenderer.render(stage);
+      
+      // Diagnostic logging every 30 frames (approx. 1 second)
+      frameCount++;
+      if (frameCount % 30 === 0 && pikaVolley) {
+        console.log(
+          `[PikaVolley Debug] P1(Left) isComputer: ${pikaVolley.physics.player1.isComputer} | ` +
+          `P2(Right) isComputer: ${pikaVolley.physics.player2.isComputer}`
+        );
+        console.log(
+          `[PikaVolley Key Status] Left(D): ${pikaVolley.keyboardArray[0].leftKey.isDown} | ` +
+          `Right(G): ${pikaVolley.keyboardArray[0].rightKey.isDown} | ` +
+          `Up(R): ${pikaVolley.keyboardArray[0].upKey.isDown} | ` +
+          `Z: ${pikaVolley.keyboardArray[0].powerHitKey.isDown}`
+        );
+      }
     });
     ticker.start();
   });
